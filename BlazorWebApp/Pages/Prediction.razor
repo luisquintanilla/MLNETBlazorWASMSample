@@ -1,4 +1,4 @@
-@page "/prediction"
+@page "/prediction/{AlgoType}"
 @inject HttpClient _client
 
 <label>Sepal Length: </label>
@@ -20,12 +20,21 @@
 
 
 @code {
+    [Parameter]
+    public string AlgoType {get;set;} = "NaiveBayes";
     private PredictionEngine<ModelInput,ModelOutput> _predictionEngine;
     private string _sepalLength, _sepalWidth, _petalLength, _petalWidth, ModelPrediction;
 
     protected override async Task OnInitializedAsync()
     {
-        Stream savedModel = await _client.GetStreamAsync("https://mlnetblazorwasmstorage.blob.core.windows.net/models/model.zip");
+        Stream savedModel;
+        if(AlgoType == "NaiveBayes")
+        {
+            savedModel = await _client.GetStreamAsync("https://mlnetblazorstorage.blob.core.windows.net/models/model-nb.zip");
+        } else 
+        {
+            savedModel = await _client.GetStreamAsync("https://mlnetblazorstorage.blob.core.windows.net/models/model-sdcanoncalibrated.zip");
+        }
         MLContext mlContext = new MLContext();
         ITransformer _model = mlContext.Model.Load(savedModel,out DataViewSchema schema);
         _predictionEngine = mlContext.Model.CreatePredictionEngine<ModelInput,ModelOutput>(_model);
